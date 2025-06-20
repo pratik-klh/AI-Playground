@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-3.5-turbo",
+    "api_key": "your-api-key-here",
+    "base_url": "https://api.openai.com/v1",
+    "timeout": 30,
+    "max_tokens": 1000,
+    "temperature": 0.7
+  },
+  "prompts": {
+    "templates_file": "templates.json",
+    "max_templates": 50,
+    "default_template": 0
+  },
+  "logging": {
+    "level": "info",
+    "file": "ai-playground.log",
+    "console": true
+  },
+  "ui": {
+    "theme": "default",
+    "show_timestamps": true,
+    "auto_save": true
+  },
+  "features": {
+    "enable_caching": false,
+    "cache_duration": 3600,
+    "enable_batch_processing": false,
+    "max_batch_size": 10
+  }
+} 
