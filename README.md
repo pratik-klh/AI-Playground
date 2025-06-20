@@ -1,196 +1,172 @@
-# AI-Playground
+# AI Playground
 
-A C++ project for experimenting with various LLM APIs and AI components.
-
-## Overview
-
-AI-Playground is a modular C++ application designed to provide a foundation for experimenting with Large Language Models (LLMs) and AI-related functionality. The project includes:
-
-- **LLM Interface**: Abstract interface for communicating with various LLM APIs
-- **Prompt Manager**: Template-based prompt management system
-- **Modular Architecture**: Extensible component-based design
-- **Interactive CLI**: User-friendly command-line interface
+A Rust project for experimenting with AI and LLM APIs. This project provides a modular framework for building AI-powered applications with components for LLM interactions, prompt management, and extensible AI utilities.
 
 ## Features
 
-- 🧠 **LLM Integration**: Ready-to-use interface for LLM APIs (OpenAI, Anthropic, etc.)
-- 📝 **Prompt Templates**: Pre-built and customizable prompt templates
-- 🔧 **Modular Design**: Easy to extend with new AI components
-- 🎯 **Interactive Demo**: Built-in demonstration of all features
-- 📚 **Well Documented**: Comprehensive code documentation
+- **LLM Interface**: Abstraction layer for communicating with various LLM APIs (OpenAI GPT, Anthropic Claude, etc.)
+- **Prompt Manager**: Template-based prompt management with variable substitution
+- **Modular Architecture**: Extensible component system for adding new AI capabilities
+- **Async Support**: Built with Tokio for efficient async operations
+- **Error Handling**: Comprehensive error handling with `anyhow`
+- **Logging**: Structured logging with `tracing`
 
 ## Project Structure
 
 ```
 AI-Playground/
-├── CMakeLists.txt          # Build configuration
-├── README.md              # This file
-├── .gitignore             # Git ignore rules
-├── include/               # Header files
-│   ├── AIComponent.h      # Base component interface
-│   ├── LLMInterface.h     # LLM API interface
-│   └── PromptManager.h    # Prompt management
-├── src/                   # Source files
-│   ├── main.cpp           # Main application
-│   └── components/        # Component implementations
-│       ├── AIComponent.cpp
-│       ├── LLMInterface.cpp
-│       └── PromptManager.cpp
-└── build/                 # Build output (generated)
+├── Cargo.toml              # Rust project configuration
+├── src/
+│   ├── main.rs             # Application entry point
+│   ├── lib.rs              # Library exports
+│   ├── components/         # AI component modules
+│   │   ├── mod.rs          # Component module exports
+│   │   ├── ai_component.rs # Base AIComponent trait
+│   │   ├── llm_interface.rs # LLM API interface
+│   │   └── prompt_manager.rs # Prompt template management
+│   └── playground/         # Main application logic
+│       ├── mod.rs          # Playground module exports
+│       └── ai_playground.rs # Main AIPlayground struct
+└── README.md               # This file
 ```
 
-## Prerequisites
+## Getting Started
 
-- **C++17 compatible compiler** (GCC 7+, Clang 5+, MSVC 2017+)
-- **CMake 3.10 or higher**
-- **Make** or **Ninja** build system
+### Prerequisites
 
-## Building the Project
+- Rust 1.70+ (install from [rustup.rs](https://rustup.rs/))
+- Cargo (comes with Rust)
 
-### 1. Clone and Navigate
+### Installation
+
+1. Clone the repository:
 ```bash
+git clone <repository-url>
 cd AI-Playground
 ```
 
-### 2. Create Build Directory
+2. Build the project:
 ```bash
-mkdir build
-cd build
+cargo build
 ```
 
-### 3. Configure with CMake
+3. Run the application:
 ```bash
-cmake ..
+cargo run
 ```
 
-### 4. Build the Project
+### Development
+
+For development with hot reloading:
 ```bash
-make
-# or with Ninja: ninja
+cargo watch -x run
 ```
 
-### 5. Run the Application
+### Testing
+
+Run the test suite:
 ```bash
-./bin/ai-playground
+cargo test
 ```
 
 ## Usage
 
-### Interactive Mode
-The application provides an interactive menu with the following options:
+The AI Playground provides an interactive command-line interface with the following options:
 
 1. **Initialize components** - Set up all AI components
 2. **Run demo** - Execute a demonstration of all features
 3. **Set API key** - Configure your LLM API key
-4. **Add prompt template** - Create custom prompt templates
+4. **Add prompt template** - Create new prompt templates
 5. **List all templates** - View available prompt templates
-6. **Test LLM response** - Send test prompts to the LLM
+6. **Test LLM response** - Send a test prompt to the LLM
 7. **Exit** - Close the application
 
-### Example Session
-```
-Welcome to AI Playground!
-A C++ project for experimenting with AI and LLM APIs
-Version 1.0.0
+## Components
 
-=== AI Playground Menu ===
-1. Initialize components
-2. Run demo
-3. Set API key
-4. Add prompt template
-5. List all templates
-6. Test LLM response
-7. Exit
-Choose an option: 1
+### AIComponent Trait
 
-=== AI Playground Initialization ===
-Initializing LLM Interface for model: gpt-3.5-turbo
-Initializing Prompt Manager with 8 templates
-Initialization complete!
-```
+The base trait for all AI components:
 
-## Extending the Project
-
-### Adding New Components
-
-1. **Create Header File** (`include/NewComponent.h`):
-```cpp
-#pragma once
-#include "AIComponent.h"
-
-class NewComponent : public AIComponent {
-public:
-    NewComponent();
-    void initialize() override;
-    void process() override;
-    // Add your custom methods
-};
-```
-
-2. **Create Implementation** (`src/components/NewComponent.cpp`):
-```cpp
-#include "../../include/NewComponent.h"
-
-NewComponent::NewComponent() 
-    : AIComponent("New Component", "Description of new component") {}
-
-void NewComponent::initialize() override {
-    // Implementation
-}
-
-void NewComponent::process() override {
-    // Implementation
+```rust
+pub trait AIComponent: Debug + Send + Sync {
+    fn initialize(&mut self) -> anyhow::Result<()>;
+    fn process(&self) -> anyhow::Result<()>;
+    fn name(&self) -> &str;
+    fn description(&self) -> &str;
 }
 ```
 
-3. **Update CMakeLists.txt** to include the new source file
-4. **Integrate** into the main application
+### LLMInterface
 
-### Adding Real LLM API Support
+Handles communication with Large Language Model APIs:
 
-The project is designed to easily integrate with real LLM APIs:
+```rust
+let mut llm = LLMInterface::new(Some("gpt-3.5-turbo".to_string()));
+llm.initialize()?;
+llm.set_api_key("your-api-key".to_string());
+let response = llm.generate_response("Hello, world!").await?;
+```
 
-1. **Install HTTP client library** (e.g., libcurl)
-2. **Install JSON library** (e.g., nlohmann/json)
-3. **Uncomment** the relevant lines in `CMakeLists.txt`
-4. **Implement** actual API calls in `LLMInterface.cpp`
+### PromptManager
 
-## Development
+Manages prompt templates and variable substitution:
 
-### Code Style
-- Follow C++17 standards
-- Use meaningful variable and function names
-- Include comprehensive documentation
-- Implement proper error handling
+```rust
+let mut pm = PromptManager::new();
+pm.add_template("Explain {topic} in simple terms".to_string())?;
+pm.set_variable("topic".to_string(), "quantum physics".to_string());
+let processed = pm.get_processed_template(0).unwrap();
+```
 
-### Testing
-- Add unit tests for new components
-- Test with different LLM providers
-- Validate prompt template functionality
+## Configuration
 
-## Future Enhancements
+The project uses environment variables for configuration. Create a `.env` file:
 
-- [ ] **Real API Integration**: Connect to actual LLM APIs
-- [ ] **Web Interface**: Add web-based UI
-- [ ] **Configuration Files**: Support for JSON/YAML configs
-- [ ] **Plugin System**: Dynamic component loading
-- [ ] **Batch Processing**: Handle multiple prompts
-- [ ] **Response Caching**: Cache LLM responses
-- [ ] **Template Variables**: Dynamic prompt templating
-- [ ] **Export/Import**: Save and load configurations
+```env
+LLM_API_KEY=your-api-key-here
+LLM_MODEL=gpt-3.5-turbo
+LLM_MAX_TOKENS=1000
+LLM_TEMPERATURE=0.7
+```
+
+## Dependencies
+
+- **reqwest**: HTTP client for API calls
+- **serde**: Serialization/deserialization
+- **tokio**: Async runtime
+- **anyhow**: Error handling
+- **tracing**: Logging framework
+- **clap**: CLI argument parsing
+- **config**: Configuration management
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-This project is open source. Please check the license file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## Migration from C++
 
-For questions or issues, please open an issue on the project repository.
+This project was converted from a C++ implementation. Key changes include:
+
+- **Memory Safety**: Rust's ownership system eliminates memory leaks and data races
+- **Async/Await**: Native async support with Tokio runtime
+- **Error Handling**: Comprehensive error handling with `anyhow`
+- **Package Management**: Cargo for dependency management
+- **Type Safety**: Strong type system with compile-time guarantees
+
+## Roadmap
+
+- [ ] Implement actual LLM API calls (OpenAI, Anthropic)
+- [ ] Add support for multiple LLM providers
+- [ ] Implement prompt template file loading
+- [ ] Add configuration file support
+- [ ] Create web interface
+- [ ] Add unit and integration tests
+- [ ] Implement plugin system for custom components
