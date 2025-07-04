@@ -2,6 +2,7 @@ use crate::components::{AIComponent, NamedComponent};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
+use serde_json;
 
 /// Configuration for LLM API requests
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10,15 +11,6 @@ pub struct LLMConfig {
     pub max_tokens: Option<u32>,
     pub temperature: Option<f32>,
     pub api_key: Option<String>,
-}
-
-/// Request structure for LLM API calls
-#[derive(Debug, Serialize)]
-struct LLMRequest {
-    model: String,
-    messages: Vec<Message>,
-    max_tokens: Option<u32>,
-    temperature: Option<f32>,
 }
 
 /// Message structure for LLM conversations
@@ -84,29 +76,53 @@ impl LLMInterface {
         if !self.is_connected {
             return Err(anyhow::anyhow!("LLM Interface not initialized"));
         }
-        
-        if self.config.api_key.is_none() {
-            return Err(anyhow::anyhow!("API key not set"));
-        }
-        
-        let _client = self.client.as_ref()
+
+        let client = self.client.as_ref()
             .ok_or_else(|| anyhow::anyhow!("HTTP client not initialized"))?;
-        
-        let _request = LLMRequest {
-            model: self.config.model.clone(),
-            messages: vec![Message {
-                role: "user".to_string(),
-                content: prompt.to_string(),
-            }],
-            max_tokens: self.config.max_tokens,
-            temperature: self.config.temperature,
-        };
-        
-        // TODO: Implement actual API call
-        // For now, return a mock response
-        info!("Generating response for prompt: {}", prompt);
-        
-        Ok(format!("This is a mock response from {} for: {}", self.config.model, prompt))
+
+        // Ollama does not require an API key for local use
+        // Prepare the request for Ollama's /api/chat endpoint
+        let url = "http://localhost:11434/api/chat";
+        let messages = vec![Message {
+            role: "user".to_string(),
+            content: prompt.to_string(),
+        }];
+
+        // Optionally, you could add a system message here if desired
+        // messages.insert(0, Message { role: "system".to_string(), content: "You are a helpful assistant.".to_string() });
+
+        let mut body = serde_json::json!({
+            "model": self.config.model,
+            "messages": messages,
+            "stream": false,
+        });
+
+        // Add temperature if set
+        if let Some(temp) = self.config.temperature {
+            body["options"] = serde_json::json!({ "temperature": temp });
+        }
+
+        let resp = client
+            .post(url)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("HTTP request failed: {e}"))?;
+
+        if !resp.status().is_success() {
+            return Err(anyhow::anyhow!(format!("Ollama API error: {}", resp.status())));
+        }
+
+        let resp_json: serde_json::Value = resp.json().await?;
+        // The response is expected to have a structure like:
+        // { "message": { "role": "assistant", "content": "..." }, ... }
+        let content = resp_json
+            .get("message")
+            .and_then(|msg| msg.get("content"))
+            .and_then(|c| c.as_str())
+            .ok_or_else(|| anyhow::anyhow!("Malformed response from Ollama"))?;
+
+        Ok(content.to_string())
     }
     
     /// Get the current model name

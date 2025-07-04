@@ -44,7 +44,7 @@ impl AIPlayground {
         // Demo LLM interaction
         println!("\n2. LLM Interaction Demo:");
         let test_prompt = "Hello, how are you?";
-        println!("Sending prompt: {}", test_prompt);
+        println!(" prompt: {}", test_prompt);
         
         match self.llm_interface.generate_response(test_prompt).await {
             Ok(response) => println!("Response: {}", response),
